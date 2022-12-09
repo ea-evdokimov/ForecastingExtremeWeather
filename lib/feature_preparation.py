@@ -1,5 +1,8 @@
+import re
 import typing as tp
+
 import numpy as np
+import pandas as pd
 from pydantic import BaseModel
 
 
@@ -48,6 +51,7 @@ def _dd_preparation(description: tp.Optional[str]) -> WindDescription:
 def dd_preparation(description: tp.Optional[str]) -> tp.Dict:
     return _dd_preparation(description).dict()
 
+
 def vv_preparation(x: tp.Union[str, float]) -> tp.Optional[float]:
     if isinstance(x, float) and np.isnan(x):
         return x
@@ -55,6 +59,7 @@ def vv_preparation(x: tp.Union[str, float]) -> tp.Optional[float]:
         return float(x)
     except:
         return float(re.match(r'\w+ ([0-9.]+)', x).group(1))
+
 
 class FeatureInterpolator:
     max_nan_percent = 0.5
