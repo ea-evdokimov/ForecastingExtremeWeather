@@ -26,20 +26,21 @@ def _dd_preparation(description: tp.Optional[str]) -> WindDescription:
     if 'штиль' in prepared_description or 'безветрие' in prepared_description:
         return WindDescription(isnan=False, changed=False, x_rad=0., y_rad=0.)
 
-    dest_to_rad = {'восток': 0,
+    # 'восток определяется неоднозначно, поэтому определим его далее'
+    dest_to_rad = {'восток': None,
                    'север': np.pi / 2,
                    'запад': np.pi,
                    'юг': 3 * np.pi / 2}
-
     counts = {k: prepared_description.count(k) for k in dest_to_rad if prepared_description.count(k) > 0}
+    dest_to_rad['восток'] = 2 * np.pi if 'восток' in counts and 'юг' in counts else 0.
 
-    count = sum((v for v in counts.values()))
-    angle = sum((c * dest_to_rad[dest] for dest, c in counts.items()))
-
-    if 'восток' in counts and 'юг' in counts:
-        angle += counts['восток'] * 2 * np.pi
-
-    res_angle = angle / count
+    total_count = sum((v for v in counts.values()))
+    if total_count < 3:
+        res_angle = sum((c * dest_to_rad[dest] for dest, c in counts.items())) / total_count
+    else:
+        mid_angle = sum((dest_to_rad[dest] for dest in counts)) / 2
+        add_angle = dest_to_rad[[k for k, v in counts.items() if v == 2][0]]
+        res_angle = (mid_angle + add_angle) / 2
 
     return WindDescription(isnan=False, changed=False, x_rad=np.cos(res_angle), y_rad=np.sin(res_angle))
 
