@@ -1,6 +1,5 @@
 import typing as tp
 import numpy as np
-from collections import defaultdict
 from pydantic import BaseModel
 
 
