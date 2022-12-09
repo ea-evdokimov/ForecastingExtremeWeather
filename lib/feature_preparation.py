@@ -47,3 +47,36 @@ def _dd_preparation(description: tp.Optional[str]) -> WindDescription:
 
 def dd_preparation(description: tp.Optional[str]) -> tp.Dict:
     return _dd_preparation(description).dict()
+
+def vv_preparation(x: tp.Union[str, float]) -> tp.Optional[float]:
+    if isinstance(x, float) and np.isnan(x):
+        return x
+    try:
+        return float(x)
+    except:
+        return float(re.match(r'\w+ ([0-9.]+)', x).group(1))
+
+class FeatureInterpolator:
+    max_nan_percent = 0.5
+    max_cons_nan_percent = 0.01
+
+    def _longest_na_seq(self, col: pd.Series) -> int:
+        na_groups = col.notna().cumsum()[col.isna()]
+        lens_cons_na = na_groups.groupby(na_groups).agg(len)
+        longest_na_len = lens_cons_na.max()
+        return 0 if longest_na_len is np.nan else longest_na_len
+
+    def interpolate_column(self, s: pd.Series) -> pd.Series:
+        return s.interpolate(method='slinear')
+
+    def get_columns(self, df: pd.DataFrame) -> tp.List[str]:
+        na_sum = df.isna().sum()
+        max_nan = int(len(df) * FeatureInterpolator.max_nan_percent / 100)
+        max_cons_nan = int(len(df) * FeatureInterpolator.max_cons_nan_percent / 100)
+        cand_cols = [c for c in df.columns if na_sum[c] <= max_nan]
+        columns = []
+        for col in cand_cols:
+            m_len = self._longest_na_seq(df[col])
+            if m_len != 0 and m_len < max_cons_nan:
+                columns.append(col)
+        return columns
