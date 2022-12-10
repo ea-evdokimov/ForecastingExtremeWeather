@@ -196,6 +196,22 @@ def pa_fill_na(df: pd.DataFrame, column_name='Pa') -> pd.DataFrame:
     return df
 
 
+def sss_RRR_tr_preparation(value: tp.Union[str, float]) -> tp.Optional[float]:
+    if value is None or isinstance(value, float) and np.isnan(value):
+        return None
+
+    if isinstance(value, str):
+        numbers = re.findall('\d+\.?\d*', value)
+        if not numbers:
+            return None
+        return np.mean([float(n) for n in numbers])
+
+    if isinstance(value, (int, float)):
+        return float(value)
+
+    return None
+
+
 class SimpleFeatureInterpolator:
     max_nan_percent = 1.5
     max_cons_nan_percent = 0.01
