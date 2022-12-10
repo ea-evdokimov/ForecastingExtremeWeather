@@ -54,7 +54,7 @@ def classify(row: pd.Series) -> tp.Dict:
         TAGS.GOLOLED: re.compile(r'голол[её]д', re.I),
     }
     for tag, regexp in regexps.items():
-        if regexp.search(WW) or regexp.search(W1) or regexp.search(W2):
+        if regexp.search(WW) or regexp.search(W1) or regexp.search(W2) or regexp.search(E) or regexp.search(E_1):
             target[tag] = True
 
     # preprocessing nan
