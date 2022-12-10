@@ -16,9 +16,10 @@ class TAGS(BaseModel):
     GOLOLED: str = 'гололедно-изморозевое отложение'
 
 
-TAGS_INSTANCE = TAGS()
-with open('tags.json', 'w') as f:
-    json.dump(TAGS_INSTANCE.dict(), f, ensure_ascii=False)
+if __name__ == '__main__':
+    TAGS_INSTANCE = TAGS()
+    with open('tags.json', 'w') as f:
+        json.dump(TAGS_INSTANCE.dict(), f, ensure_ascii=False)
 
 
 class Target(BaseModel):
