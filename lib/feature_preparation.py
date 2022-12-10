@@ -133,6 +133,22 @@ def pa_fill_na(df: pd.DataFrame, column_name='Pa') -> pd.DataFrame:
     return df
 
 
+def parse_N(x: tp.Optional[str]) -> float:
+    if not isinstance(x, str):
+        return np.nan
+    if x.find('Облаков нет') != -1:
+        return 0
+    groups = re.findall('[0-9]+', x)
+    if len(groups) == 1:
+        return float(groups[0])
+    if len(groups) == 2:
+        return (float(groups[0]) + float(groups[1])) / 2
+    return np.nan
+
+def n_pipeline(df: pd.DataFrame, column_name='N') -> pd.DataFrame:
+    df[column_name] = df[column_name].progress_map(parse_N)
+    return df
+
 class SimpleFeatureInterpolator:
     max_nan_percent = 1.5
     max_cons_nan_percent = 0.01

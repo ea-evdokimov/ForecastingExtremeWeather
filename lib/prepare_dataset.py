@@ -24,7 +24,8 @@ class Mode(str, Enum):
 pipeline = [
     feature_preparation.local_time_pipeline,
     feature_preparation.dd_pipeline,
-    feature_preparation.ch_pipeline
+    feature_preparation.ch_pipeline,
+    feature_preparation.n_pipeline
 ]
 
 
