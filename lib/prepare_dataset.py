@@ -15,7 +15,7 @@ def prepare_dataset(dataset: pd.DataFrame,
         tp.Tuple[pd.DataFrame, pd.DataFrame]:
     allow_columns = allow_columns or ALLOW_COLUMNS
     # Step 1: markup target
-    target = pd.json_normalize(dataset.apply(target_markup.classify))
+    target = pd.json_normalize(dataset.apply(target_markup.classify, axis=1))
 
     # Step 2: prepare features
     prepared_dataset = dataset.copy()
