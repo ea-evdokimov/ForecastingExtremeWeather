@@ -33,7 +33,7 @@ def fill_nans(dataset: pd.DataFrame,
     if mode == Mode.UNPROCESSED:
         return dataset
     
-    simple_int_cand = ["T", "PP", "VV", "U", "DD", "Ff"]
+    simple_int_cand = ["T", "PP", "VV", "U", "Ff"]
     if allow_columns is not None:
         simple_int_cand = list(set(simple_int_cand).intersection(set(allow_columns)))
     for col in simple_int_cand:
