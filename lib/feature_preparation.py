@@ -124,6 +124,14 @@ def ch_pipeline(df: pd.DataFrame, column_name='Ch') -> pd.DataFrame:
     df[column_name] = df[column_name].progress_map(ch_preparation)
     return df
 
+def pa_fill_na(df: pd.DataFrame, column_name='Pa') -> pd.DataFrame:
+    g = df.groupby('station_id')
+    t_diff = g.local_time.diff(-1).fillna(pd.Timedelta('03:00:00')) / pd.Timedelta('03:00:00')
+    p_diff = g.P.diff(-1).fillna(0)
+    pa = p_diff / t_diff
+    df[column_name] = df[column_name].fillna(pa).round(4)
+    return df
+
 
 class SimpleFeatureInterpolator:
     max_nan_percent = 1.5

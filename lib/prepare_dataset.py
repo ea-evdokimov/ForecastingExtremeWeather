@@ -4,6 +4,7 @@ from enum import Enum
 import pandas as pd
 from loguru import logger
 from tqdm import tqdm
+from functools import lru_cache
 
 import feature_preparation
 import target_markup
@@ -27,6 +28,7 @@ pipeline = [
 ]
 
 
+@lru_cache(maxsize=8)
 def fill_nans(dataset: pd.DataFrame, 
               allow_columns: tp.Optional[tp.List] = None, 
               mode=tp.Union[Mode, str]) -> pd.DataFrame:
@@ -38,7 +40,11 @@ def fill_nans(dataset: pd.DataFrame,
         simple_int_cand = list(set(simple_int_cand).intersection(set(allow_columns)))
     for col in simple_int_cand:
         dataset[col] = feature_preparation.SimpleFeatureInterpolator.interpolate_column(dataset[col])
-    return dataset[col]
+
+    # PA
+    dataset = feature_preparation.pa_fill_na(dataset)
+
+    return dataset
 
 
 def make_target(dataset: pd.DataFrame) -> pd.DataFrame:
@@ -46,6 +52,7 @@ def make_target(dataset: pd.DataFrame) -> pd.DataFrame:
     return target
 
 
+@lru_cache(maxsize=8)
 def prepare_dataset(dataset: pd.DataFrame,
                     allow_columns: tp.Optional[tp.List] = None,
                     mode: tp.Union[Mode, str] = Mode.PROCESSED) -> \
