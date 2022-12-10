@@ -62,8 +62,8 @@ def dd_pipeline(df: pd.DataFrame, column_name='DD') -> pd.DataFrame:
     return pd.merge(df, dd_values, left_index=True, right_index=True, copy=False)
 
 
-def _local_time_to_timestamp(dtime: str) -> int:
-    return int(datetime.strptime(dtime, '%d.%m.%Y %H:%M').timestamp()) // 3600
+def _local_time_to_datetime(dtime: str) -> int:
+    return pd.to_datetime(dtime, format='%d.%m.%Y %H:%M')
 
 
 def local_time_pipeline(df: pd.DataFrame, column_name='local_time') -> pd.DataFrame:
@@ -72,7 +72,7 @@ def local_time_pipeline(df: pd.DataFrame, column_name='local_time') -> pd.DataFr
     :param column_name:
     :return: df with columns contained hours
     '''
-    df[column_name] = df[column_name].progress_map(_local_time_to_timestamp)
+    df[column_name] = df[column_name].progress_map(_local_time_to_datetime)
     return df
 
 
@@ -87,18 +87,18 @@ def vv_preparation(x: tp.Union[str, float]) -> tp.Optional[float]:
 
 def sliding_window_features(df, feature_columns, target_columns, size):
     df_new = df.sort_index(ascending=False).copy()
-    
+
     columns = target_columns + feature_columns
     for column in columns:
-        for shift in range(1, size + 1):    
+        for shift in range(1, size + 1):
             feature_values = df_new[column].values
             feature_values_shifted = np.roll(feature_values, -shift)
-            df_new[column + '_' + str(shift)] = feature_values_shifted    
-    
+            df_new[column + '_' + str(shift)] = feature_values_shifted
+
     y = df_new[target_columns]
-    
+
     df_new = df_new.drop(columns, axis=1)
-    
+
     return df_new.iloc[:-size], y.iloc[:-size]
 
 
@@ -125,27 +125,31 @@ def ch_pipeline(df: pd.DataFrame, column_name='Ch') -> pd.DataFrame:
     return df
 
 
-class FeatureInterpolator:
-    max_nan_percent = 0.5
+class SimpleFeatureInterpolator:
+    max_nan_percent = 1.5
     max_cons_nan_percent = 0.01
 
-    def _longest_na_seq(self, col: pd.Series) -> int:
+    @staticmethod
+    def _longest_na_seq(col: pd.Series) -> int:
         na_groups = col.notna().cumsum()[col.isna()]
         lens_cons_na = na_groups.groupby(na_groups).agg(len)
         longest_na_len = lens_cons_na.max()
         return 0 if longest_na_len is np.nan else longest_na_len
 
-    def interpolate_column(self, s: pd.Series) -> pd.Series:
+    @staticmethod
+    def interpolate_column(s: pd.Series) -> pd.Series:
         return s.interpolate(method='slinear')
 
-    def get_columns(self, df: pd.DataFrame) -> tp.List[str]:
+    @staticmethod
+    def get_columns(df: pd.DataFrame) -> tp.List[str]:
         na_sum = df.isna().sum()
-        max_nan = int(len(df) * FeatureInterpolator.max_nan_percent / 100)
-        max_cons_nan = int(len(df) * FeatureInterpolator.max_cons_nan_percent / 100)
+        max_nan = int(len(df) * SimpleFeatureInterpolator.max_nan_percent / 100)
+        max_cons_nan = int(len(df) * SimpleFeatureInterpolator.max_cons_nan_percent / 100)
         cand_cols = [c for c in df.columns if na_sum[c] <= max_nan]
         columns = []
         for col in cand_cols:
-            m_len = self._longest_na_seq(df[col])
+            m_len = SimpleFeatureInterpolator._longest_na_seq(df[col])
             if m_len != 0 and m_len < max_cons_nan:
                 columns.append(col)
         return columns
+

@@ -27,6 +27,25 @@ pipeline = [
 ]
 
 
+def fill_nans(dataset: pd.DataFrame, 
+              allow_columns: tp.Optional[tp.List] = None, 
+              mode=tp.Union[Mode, str]) -> pd.DataFrame:
+    if mode == Mode.UNPROCESSED:
+        return dataset
+    
+    simple_int_cand = ["T", "PP", "VV", "U", "Ff"]
+    if allow_columns is not None:
+        simple_int_cand = list(set(simple_int_cand).intersection(set(allow_columns)))
+    for col in simple_int_cand:
+        dataset[col] = feature_preparation.SimpleFeatureInterpolator.interpolate_column(dataset[col])
+    return dataset[col]
+
+
+def make_target(dataset: pd.DataFrame) -> pd.DataFrame:
+    target = pd.json_normalize(dataset.progress_apply(target_markup.classify, axis=1))
+    return target
+
+
 def prepare_dataset(dataset: pd.DataFrame,
                     allow_columns: tp.Optional[tp.List] = None,
                     mode: tp.Union[Mode, str] = Mode.PROCESSED) -> \
@@ -34,20 +53,29 @@ def prepare_dataset(dataset: pd.DataFrame,
     allow_columns = allow_columns or ALLOW_COLUMNS
 
     tqdm.pandas()
-    # Step 1: markup target
-    logger.info('Markup target...')
-    target = pd.json_normalize(dataset.progress_apply(target_markup.classify, axis=1))
-
-    # Step 2: prepare features
+    
+    # Step 1: prepare features
     prepared_dataset = dataset.copy()
     logger.info(f'Current mode of preparation is {mode}.')
     if mode == Mode.UNPROCESSED:
         logger.info('Done (unprocessed)!')
+        target = make_target(prepared_dataset)
+        logger.info('Markup target...')
         return prepared_dataset, target
+    
+    # Step 2: sort features
+    prepared_dataset.sort_values(['station_id', 'local_time'], ascending=False, 
+                                inplace=True)
+    prepared_dataset = prepared_dataset.reset_index(drop=True)
+    target = make_target(prepared_dataset)
 
+    # Step 3: prepare features  
     for step in tqdm(pipeline):
         logger.info(f'Step: {step.__name__}')
         prepared_dataset = step(prepared_dataset)
+    
+    logger.info('Filling nans!')
+    prepared_dataset = fill_nans(prepared_dataset, allow_columns=allow_columns, mode=mode)
 
     logger.info('Done (processed)!')
     return prepared_dataset, target
