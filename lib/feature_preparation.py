@@ -61,6 +61,16 @@ def vv_preparation(x: tp.Union[str, float]) -> tp.Optional[float]:
         return float(re.match(r'\w+ ([0-9.]+)', x).group(1))
 
 
+def sliding_window_features(df, columns, size):
+    df_new = df.sort_index(ascending=False).copy()
+    for column in columns:
+        for shift in range(1, size + 1):    
+            feature_values = df[column].values
+            feature_values_shifted = np.roll(feature_values, -shift)
+            df_new[column + '_' + str(shift)] = feature_values_shifted    
+    return df_new.iloc[:-size]
+
+
 class FeatureInterpolator:
     max_nan_percent = 0.5
     max_cons_nan_percent = 0.01
