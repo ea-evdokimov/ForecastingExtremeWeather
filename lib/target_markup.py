@@ -35,14 +35,14 @@ class Target:
         self._values[key] = value
 
     def export(self):
-        return {k.name: v for k, v in self._values}
+        return {k.name: v for k, v in self._values.items()}
 
 
 def classify(row: pd.Series) -> tp.Dict:
     target = Target()
 
     # regex parse of WW, W1, W2 on keywords
-    WW, W1, W2 = str(row['WW']), str(row['W1']), str(row['W1'])
+    WW, W1, W2, E, E_1 = str(row['WW']), str(row['W1']), str(row['W1']), str(row['E']), str(row["E'"])
     regexps = {
         TAGS.VETER: re.compile(r'ветер|ветр', re.I),
         TAGS.SHKVAL: re.compile(r'шквал', re.I),
@@ -81,4 +81,5 @@ def classify(row: pd.Series) -> tp.Dict:
         target[TAGS.DOZD] = True
     if row['VV'] <= 0.05:
         target[TAGS.TUMAN] = True
+
     return target.export()
