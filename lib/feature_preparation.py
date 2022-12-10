@@ -1,7 +1,7 @@
 import re
 import typing as tp
 
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 tqdm.pandas()
 import numpy as np

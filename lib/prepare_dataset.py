@@ -3,7 +3,7 @@ from enum import Enum
 
 import pandas as pd
 from loguru import logger
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from functools import lru_cache
 
 import feature_preparation
