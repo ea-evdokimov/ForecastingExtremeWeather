@@ -19,5 +19,6 @@ def prepare_dataset(dataset: pd.DataFrame,
 
     # Step 2: prepare features
     prepared_dataset = dataset.copy()
+    prepared_dataset = prepared_dataset[allow_columns]
 
     return prepared_dataset, target
