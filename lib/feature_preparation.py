@@ -62,8 +62,8 @@ def dd_pipeline(df: pd.DataFrame, column_name='DD') -> pd.DataFrame:
     return pd.merge(df, dd_values, left_index=True, right_index=True, copy=False)
 
 
-def _local_time_to_timestamp(dtime: str) -> int:
-    return int(datetime.strptime(dtime, '%d.%m.%Y %H:%M').timestamp()) // 3600
+def _local_time_to_datetime(dtime: str) -> int:
+    return pd.to_datetime(dtime, format='%d.%m.%Y %H:%M')
 
 
 def local_time_pipeline(df: pd.DataFrame, column_name='local_time') -> pd.DataFrame:
@@ -72,7 +72,7 @@ def local_time_pipeline(df: pd.DataFrame, column_name='local_time') -> pd.DataFr
     :param column_name:
     :return: df with columns contained hours
     '''
-    df[column_name] = df[column_name].progress_map(_local_time_to_timestamp)
+    df[column_name] = df[column_name].progress_map(_local_time_to_datetime)
     return df
 
 
