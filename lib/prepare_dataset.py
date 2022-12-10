@@ -27,6 +27,20 @@ pipeline = [
 ]
 
 
+def fill_nans(dataset: pd.DataFrame, 
+              allow_columns: tp.Optional[tp.List] = None, 
+              mode=tp.Union[Mode, str]) -> pd.DataFrame:
+    if mode == Mode.UNPROCESSED:
+        return dataset
+    
+    simple_int_cand = feature_preparation.SimpleFeatureInterpolator.get_columns(dataset)
+    if allow_columns is not None:
+        simple_int_cand = list(set(simple_int_cand).intersection(set(allow_columns)))
+    for col in simple_int_cand:
+        dataset[col] = feature_preparation.SimpleFeatureInterpolator.interpolate_column(dataset[col])
+    return dataset[col]
+
+
 def prepare_dataset(dataset: pd.DataFrame,
                     allow_columns: tp.Optional[tp.List] = None,
                     mode: tp.Union[Mode, str] = Mode.PROCESSED) -> \
@@ -48,6 +62,9 @@ def prepare_dataset(dataset: pd.DataFrame,
     for step in tqdm(pipeline):
         logger.info(f'Step: {step.__name__}')
         prepared_dataset = step(prepared_dataset)
+    
+    logger.info('Filling nans!')
+    prepare_dataset = fill_nans(prepare_dataset, allow_columns=allow_columns, mode=mode)
 
     logger.info('Done (processed)!')
     return prepared_dataset, target
