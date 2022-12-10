@@ -144,6 +144,8 @@ cl_mapper = {
 }
 
 
+
+
 def ch_preparation(description: tp.Optional[str]) -> tp.Optional[str]:
     return ch_mapper[description] if isinstance(description, str) else None
 
@@ -188,7 +190,7 @@ def n_pipeline(df: pd.DataFrame, column_name='N') -> pd.DataFrame:
     return df
 
 
-def h_pipeline(df: pd.DataFrame, column_name='h') -> pd.DataFrame:
+def h_pipeline(df: pd.DataFrame, column_name='H') -> pd.DataFrame:
     df[column_name] = df[column_name].progress_map(parse_clouds)
     return df
 
