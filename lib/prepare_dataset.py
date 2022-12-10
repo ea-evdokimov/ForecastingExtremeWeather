@@ -67,6 +67,7 @@ def prepare_dataset(dataset: pd.DataFrame,
     prepared_dataset.sort_values(['station_id', 'local_time'], ascending=False, 
                                 inplace=True)
     prepared_dataset = prepared_dataset.reset_index(drop=True)
+    target = make_target(prepared_dataset)
 
     # Step 3: prepare features  
     for step in tqdm(pipeline):
