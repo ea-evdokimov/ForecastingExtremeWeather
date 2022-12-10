@@ -144,16 +144,16 @@ cl_mapper = {
 }
 
 
-def ch_preparation(description: tp.Optional[str]) -> str:
-    return ch_mapper[description] if isinstance(description, str) else description
+def ch_preparation(description: tp.Optional[str]) -> tp.Optional[str]:
+    return ch_mapper[description] if isinstance(description, str) else None
 
 
-def cm_preparation(description: tp.Optional[str]): 
-    return cm_mapper[description] if type(description) == str else 'Nan'
+def cm_preparation(description: tp.Optional[str]) -> tp.Optional[str]: 
+    return cm_mapper[description] if isinstance(description, str) else None
 
 
-def cl_preparation(description: tp.Optional[str]): 
-    return cl_mapper[description] if type(description) == str else 'Nan'
+def cl_preparation(description: tp.Optional[str]) -> tp.Optional[str]: 
+    return cl_mapper[description] if isinstance(description, str) else None
 
 
 def ch_pipeline(df: pd.DataFrame, column_name='Ch') -> pd.DataFrame:
@@ -171,28 +171,26 @@ def cl_pipeline(df: pd.DataFrame, column_name='Cl') -> pd.DataFrame:
     return df
 
 
-h_mapper = {
-    'Менее 50' : '200',
-    '50-100' : '200',
-    '100-200' : '200', 
-    '200-300' : '300',
-    '300-600' : '600',
-    '600-1000' : '1000',
-    '1000-1500' : '2500',
-    '1500-2000' : '2500',
-    '2000-2500' : '2500',
-    '2500 или более, или облаков нет.' : 'Нет'
-}
+def parse_clouds(x: tp.Optional[str]) -> tp.Optional[float]:
+    if not isinstance(x, str):
+        return None
+    if x.lower().find('облаков нет') != -1:
+        return 0
+    groups = re.findall('[0-9]+', x)
+    if len(groups) == 1:
+        return float(groups[0])
+    if len(groups) == 2:
+        return (float(groups[0]) + float(groups[1])) / 2
+    return None
 
-
-def h_preparation(description: tp.Optional[str]): 
-    return h_mapper[description] if type(description) == str else 'Nan'
+def n_pipeline(df: pd.DataFrame, column_name='N') -> pd.DataFrame:
+    df[column_name] = df[column_name].progress_map(parse_clouds)
+    return df
 
 
 def h_pipeline(df: pd.DataFrame, column_name='h') -> pd.DataFrame:
-    df[column_name] = df[column_name].progress_map(cl_preparation)
+    df[column_name] = df[column_name].progress_map(parse_clouds)
     return df
-
 
 def pa_fill_na(df: pd.DataFrame, column_name='Pa') -> pd.DataFrame:
     g = df.groupby('station_id')
@@ -200,23 +198,6 @@ def pa_fill_na(df: pd.DataFrame, column_name='Pa') -> pd.DataFrame:
     p_diff = g.P.diff(-1).fillna(0)
     pa = p_diff / t_diff
     df[column_name] = df[column_name].fillna(pa).round(4)
-    return df
-
-
-def parse_N(x: tp.Optional[str]) -> float:
-    if not isinstance(x, str):
-        return np.nan
-    if x.find('Облаков нет') != -1:
-        return 0
-    groups = re.findall('[0-9]+', x)
-    if len(groups) == 1:
-        return float(groups[0])
-    if len(groups) == 2:
-        return (float(groups[0]) + float(groups[1])) / 2
-    return np.nan
-
-def n_pipeline(df: pd.DataFrame, column_name='N') -> pd.DataFrame:
-    df[column_name] = df[column_name].progress_map(parse_N)
     return df
 
 class SimpleFeatureInterpolator:

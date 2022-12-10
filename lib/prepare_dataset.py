@@ -25,6 +25,9 @@ pipeline = [
     feature_preparation.local_time_pipeline,
     feature_preparation.dd_pipeline,
     feature_preparation.ch_pipeline,
+    feature_preparation.cm_pipeline,
+    feature_preparation.cl_pipeline,
+    feature_preparation.h_pipeline,
     feature_preparation.n_pipeline
 ]
 
