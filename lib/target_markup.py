@@ -73,8 +73,10 @@ def classify(row: pd.Series) -> tp.Dict:
         row['RRR'] = float(row['RRR'])
 
     # heuristics based on meteoinfo.ru
-    if row['Ff'] >= 20.0 or row['ff3'] >= 25.0:
+    if row['Ff'] >= 11.0 or row['ff3'] >= 15.0:
         target[TAGS.VETER] = True
+    if row['ff3'] - row['Ff'] >= 10:
+        target[TAGS.SHKVAL] = True
     if row['Ff'] >= 15.0 and row['VV'] <= 0.5:
         target[TAGS.METEL] = True
     if row['RRR'] >= 50.0 and row['tR'] <= 12:
