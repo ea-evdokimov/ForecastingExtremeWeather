@@ -15,10 +15,9 @@ def prepare_dataset(dataset: pd.DataFrame,
         tp.Tuple[pd.DataFrame, pd.DataFrame]:
     allow_columns = allow_columns or ALLOW_COLUMNS
     # Step 1: markup target
-    target = target_markup.classify(dataset)
+    target = pd.json_normalize(dataset.apply(target_markup.classify))
 
     # Step 2: prepare features
     prepared_dataset = dataset.copy()
-    prepared_dataset = prepared_dataset[allow_columns]
 
     return prepared_dataset, target
