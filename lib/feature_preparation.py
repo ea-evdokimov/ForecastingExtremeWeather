@@ -212,6 +212,12 @@ def sss_RRR_tr_preparation(value: tp.Union[str, float]) -> tp.Optional[float]:
     return None
 
 
+def rolling_window_na_fill(df: pd.DataFrame, column_name: str, window_size: int) -> pd.DataFrame:
+    rolling = df[column_name].rolling(window=window_size, min_periods=1).mean()
+    df[column_name] = df[column_name].fillna(rolling)
+    return df
+
+
 class SimpleFeatureInterpolator:
     max_nan_percent = 1.5
     max_cons_nan_percent = 0.01
