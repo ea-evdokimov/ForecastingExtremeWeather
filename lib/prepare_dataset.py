@@ -46,6 +46,8 @@ def fill_nans(dataset: pd.DataFrame,
 
     # PA
     dataset = feature_preparation.pa_fill_na(dataset)
+    dataset = feature_preparation.tn_preparation(dataset)
+    dataset = feature_preparation.tx_preparation(dataset)
 
     return dataset
 

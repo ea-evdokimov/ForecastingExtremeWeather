@@ -213,9 +213,40 @@ def sss_RRR_tr_preparation(value: tp.Union[str, float]) -> tp.Optional[float]:
 
 
 def rolling_window_na_fill(df: pd.DataFrame, column_name: str, window_size: int) -> pd.DataFrame:
-    rolling = df[column_name].rolling(window=window_size, min_periods=1).mean()
+    rolling = df[column_name].rolling(window=window_size, min_periods=1, center=True).mean()
     df[column_name] = df[column_name].fillna(rolling)
     return df
+
+
+class FloatWithNanModel(BaseModel):
+    isnan: bool
+    val: float
+
+def _float_with_nan_prep(d: tp.Optional[float], default: float) -> FloatWithNanModel:
+    if d is None or not isinstance(d, float):
+        return FloatWithNanModel(isnan=True, val=default)
+    return FloatWithNanModel(isnan=False, val=d)
+
+
+def _float_with_replace(df: pd.DataFrame, col: str, 
+                        default: pd.Series, prefix_name: tp.Optional[str] = None) -> pd.DataFrame:
+    def_name = default.name    
+    joined = default.to_frame().join(df[col])
+    data = joined.apply(lambda x: _float_with_nan_prep(x[col], x[def_name]).dict(), axis=1)
+    if prefix_name is None:
+        prefix_name = col + "_"
+    return pd.json_normalize(data).add_prefix(prefix_name)
+
+    
+def tn_preparation(df: pd.DataFrame, col: str = 'Tn', t_col: str = 'T', 
+                   window_size: int = 4, prefix_name: str = 'Tn_') -> pd.DataFrame:
+    roll_mins_12_h = df[t_col].rolling(window=window_size, min_periods=1, center=False).min()
+    return _float_with_replace(df, col, roll_mins_12_h, prefix_name=prefix_name)
+
+def tx_preparation(df: pd.DataFrame, col: str = 'Tx', t_col: str = 'T', 
+                   window_size: int = 4, prefix_name: str = 'Tx_') -> pd.DataFrame:
+    roll_maxs_12_h = df[t_col].rolling(window=window_size, min_periods=1, center=False).min()
+    return _float_with_replace(df, col, roll_maxs_12_h, prefix_name=prefix_name)
 
 
 class SimpleFeatureInterpolator:
