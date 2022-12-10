@@ -1,9 +1,13 @@
 import re
 import typing as tp
 
+from tqdm import tqdm
+
+tqdm.pandas()
 import numpy as np
 import pandas as pd
 from pydantic import BaseModel
+from datetime import datetime
 
 
 class WindDescription(BaseModel):
@@ -52,6 +56,26 @@ def dd_preparation(description: tp.Optional[str]) -> tp.Dict:
     return _dd_preparation(description).dict()
 
 
+def dd_pipeline(df: pd.DataFrame, column_name='DD') -> pd.DataFrame:
+    dd_values = pd.json_normalize(df.DD.progress_map(dd_preparation)).add_prefix('dd_')
+    df.drop(columns=[column_name], inplace=True)
+    return pd.merge(df, dd_values, left_index=True, right_index=True, copy=False)
+
+
+def _local_time_to_timestamp(dtime: str) -> int:
+    return int(datetime.strptime(dtime, '%d.%m.%Y %H:%M').timestamp()) // 3600
+
+
+def local_time_pipeline(df: pd.DataFrame, column_name='local_time') -> pd.DataFrame:
+    '''
+    :param df:
+    :param column_name:
+    :return: df with columns contained hours
+    '''
+    df[column_name] = df[column_name].progress_map(_local_time_to_timestamp)
+    return df
+
+
 def vv_preparation(x: tp.Union[str, float]) -> tp.Optional[float]:
     if isinstance(x, float) and np.isnan(x):
         return x
@@ -79,21 +103,26 @@ def sliding_window_features(df, feature_columns, target_columns, size):
 
 
 ch_mapper = {
-    'Перисто-кучевые одни или перисто-кучевые, сопровождаемые перистыми или перисто-слоистыми, либо те и другие, но перисто-кучевые преобладают среди них.':'Кучевые',
-    'Перисто-слоистые, не распространяющиеся по небу и не покрывающие его полностью.' : 'Перисто-слоистые',
-    'Перисто-слоистые, покрывающие все небо.' : 'Перисто-слоистые',
-    'Перистые (часто в виде полос) и перисто-слоистые, распространяющиеся по небу и в целом обычно уплотняющиеся, но сплошная пелена поднимается над горизонтом менее чем на 45°.' : 'Перисто-слоистые',
-    'Перистые (часто в виде полос) и перисто-слоистые, распространяющиеся по небу и в целом обычно уплотняющиеся; сплошная пелена, поднимающаяся над горизонтом выше 45°, не покрывает всего неба.' : 'Перисто-слоистые',
-    'Перистые когтевидные или нитевидные или первые и вторые, распространяющиеся по небу и в целом обычно уплотняющиеся.' : 'Нитевидные',
-    'Перистые нитевидные, иногда когтевидные, не распространяющиеся по небу.' : 'Нитевидные',
-    'Перистые плотные в виде клочьев или скрученных склонов, количество которых обычно не увеличивается, иногда могут казаться остатками верхней части кучево-дождевых; или перистые башенкообразные, или перистые хлопьевидные.' : 'Перистые плотные',
-    'Перистые плотные, образовавшиеся от кучево-дождевых.' : 'Перистые плотные',
-    'Перистых, перисто-кучевых или перисто-слоистых нет.' : 'Нет'
+    'Перисто-кучевые одни или перисто-кучевые, сопровождаемые перистыми или перисто-слоистыми, либо те и другие, но перисто-кучевые преобладают среди них.': 'Кучевые',
+    'Перисто-слоистые, не распространяющиеся по небу и не покрывающие его полностью.': 'Перисто-слоистые',
+    'Перисто-слоистые, покрывающие все небо.': 'Перисто-слоистые',
+    'Перистые (часто в виде полос) и перисто-слоистые, распространяющиеся по небу и в целом обычно уплотняющиеся, но сплошная пелена поднимается над горизонтом менее чем на 45°.': 'Перисто-слоистые',
+    'Перистые (часто в виде полос) и перисто-слоистые, распространяющиеся по небу и в целом обычно уплотняющиеся; сплошная пелена, поднимающаяся над горизонтом выше 45°, не покрывает всего неба.': 'Перисто-слоистые',
+    'Перистые когтевидные или нитевидные или первые и вторые, распространяющиеся по небу и в целом обычно уплотняющиеся.': 'Нитевидные',
+    'Перистые нитевидные, иногда когтевидные, не распространяющиеся по небу.': 'Нитевидные',
+    'Перистые плотные в виде клочьев или скрученных склонов, количество которых обычно не увеличивается, иногда могут казаться остатками верхней части кучево-дождевых; или перистые башенкообразные, или перистые хлопьевидные.': 'Перистые плотные',
+    'Перистые плотные, образовавшиеся от кучево-дождевых.': 'Перистые плотные',
+    'Перистых, перисто-кучевых или перисто-слоистых нет.': 'Нет'
 }
 
 
-def ch_preparation(description: tp.Optional[str]): 
-    return ch_mapper[description] if type(description) == str else description
+def ch_preparation(description: tp.Optional[str]) -> str:
+    return ch_mapper[description] if isinstance(description, str) else description
+
+
+def ch_pipeline(df: pd.DataFrame, column_name='Ch') -> pd.DataFrame:
+    df[column_name] = df[column_name].progress_map(ch_preparation)
+    return df
 
 
 class FeatureInterpolator:
