@@ -39,6 +39,7 @@ class Target(BaseModel):
 def classify(row: pd.Series) -> tp.Dict:
     target = Target()
 
+    # regex parse of WW, W1, W2 on keywords
     WW, W1, W2 = str(row['WW']), str(row['W1']), str(row['W1'])
     regexps = {
         TAGS_INSTANCE.VETER: re.compile(r'ветер|ветр', re.I),
@@ -54,16 +55,25 @@ def classify(row: pd.Series) -> tp.Dict:
         if regexp.search(WW) or regexp.search(W1) or regexp.search(W2):
             target.values[tag] = True
 
+    # preprocessing nan
+    VV_to_float = {
+        'менее 0.05': 0.05,
+        'менее 0.1': 0.1,
+    }
+    if row['VV'] in VV_to_float.keys():
+        row['VV'] = VV_to_float[row['VV']]
+    else:
+        row['VV'] = float(row['VV'])
+
+    # heuristics based on meteoinfo.ru
     if row['Ff'] >= 20.0 or row['ff10'] >= 25.0:  # ff10 and ff3
         target.values[TAGS_INSTANCE.VETER] = True
-
     if all([
         'снег' in str(row["E'"]).lower(),
         row['Ff'] >= 15.0,
-        # row['VV'] <= 0.5,
+        row['VV'] <= 0.5,
     ]):
         target.values[TAGS_INSTANCE.METEL] = True
-
     # if row['RRR'] >= 50.0 and row['tR'] <= 12:
     #     target.values[TAGS_INSTANCE.DOZD] = True
 
