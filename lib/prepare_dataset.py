@@ -28,7 +28,6 @@ pipeline = [
 ]
 
 
-@lru_cache(maxsize=8)
 def fill_nans(dataset: pd.DataFrame, 
               allow_columns: tp.Optional[tp.List] = None, 
               mode=tp.Union[Mode, str]) -> pd.DataFrame:
@@ -52,7 +51,6 @@ def make_target(dataset: pd.DataFrame) -> pd.DataFrame:
     return target
 
 
-@lru_cache(maxsize=8)
 def prepare_dataset(dataset: pd.DataFrame,
                     allow_columns: tp.Optional[tp.List] = None,
                     mode: tp.Union[Mode, str] = Mode.PROCESSED) -> \
