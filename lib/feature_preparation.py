@@ -89,6 +89,22 @@ def ch_preparation(description: tp.Optional[str]):
     return ch_mapper[description] if type(description) == str else description
 
 
+def generate_features(dataset: pd.DataFrame, columns: list, functions2: list, functions1: list):
+    new_columns = []
+    for i, col1 in enumerate(columns):
+        for col2 in columns[i + 1:]:
+            for func in functions2:
+                column = func.__name__ + '_' + col1 + '_' + col2
+                new_columns.append(column)
+                dataset[column] = func(dataset[col1], dataset[col2])
+    columns += new_columns
+    for col in columns:
+        for func in functions1:
+            column = func.__name__ + '(' + col + ')'
+            dataset[column] = func(dataset[col])
+    return dataset
+
+
 class FeatureInterpolator:
     max_nan_percent = 0.5
     max_cons_nan_percent = 0.01
