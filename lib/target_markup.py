@@ -38,6 +38,27 @@ class Target:
         return {k.name: v for k, v in self._values.items()}
 
 
+def classify_based_on_text(row: pd.Series) -> tp.Dict:
+    target = Target()
+
+    WW, W1, W2, E, E_1 = str(row['WW']), str(row['W1']), str(row['W1']), str(row['E']), str(row["E'"])
+    regexps = {
+        TAGS.VETER: re.compile(r'ветер|ветр', re.I),
+        TAGS.SHKVAL: re.compile(r'шквал', re.I),
+        TAGS.METEL: re.compile(r'метел', re.I),
+        TAGS.DOZD: re.compile(r'дожд|ливен|морос', re.I),
+        TAGS.SNEG: re.compile(r'снег|снежн|круп|зерн', re.I),
+        TAGS.GRAD: re.compile(r'град', re.I),
+        TAGS.TUMAN: re.compile(r'туман|мгла', re.I),
+        TAGS.GOLOLED: re.compile(r'голол[её]д', re.I),
+    }
+    for tag, regexp in regexps.items():
+        if regexp.search(WW) or regexp.search(W1) or regexp.search(W2) or regexp.search(E) or regexp.search(E_1):
+            target[tag] = True
+
+    return target.export()
+
+
 def classify(row: pd.Series) -> tp.Dict:
     target = Target()
 
