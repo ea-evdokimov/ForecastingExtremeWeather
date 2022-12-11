@@ -241,12 +241,17 @@ def _float_with_replace(df: pd.DataFrame, col: str,
 def tn_preparation(df: pd.DataFrame, col: str = 'Tn', t_col: str = 'T', 
                    window_size: int = 4, prefix_name: str = 'Tn_') -> pd.DataFrame:
     roll_mins_12_h = df[t_col].rolling(window=window_size, min_periods=1, center=False).min()
-    return _float_with_replace(df, col, roll_mins_12_h, prefix_name=prefix_name)
+    vals = _float_with_replace(df, col, roll_mins_12_h, prefix_name=prefix_name)
+    df.drop(columns=[col], inplace=True)
+    return pd.merge(df, vals, left_index=True, right_index=True, copy=False)
+
 
 def tx_preparation(df: pd.DataFrame, col: str = 'Tx', t_col: str = 'T', 
-                   window_size: int = 4, prefix_name: str = 'Tx_') -> pd.DataFrame:
-    roll_maxs_12_h = df[t_col].rolling(window=window_size, min_periods=1, center=False).min()
-    return _float_with_replace(df, col, roll_maxs_12_h, prefix_name=prefix_name)
+                window_size: int = 4, prefix_name: str = 'Tx_') -> pd.DataFrame:
+    roll_maxs_12_h = df[t_col].rolling(window=window_size, min_periods=1, center=False).max()
+    vals = _float_with_replace(df, col, roll_maxs_12_h, prefix_name=prefix_name)
+    df.drop(columns=[col], inplace=True)
+    return pd.merge(df, vals, left_index=True, right_index=True, copy=False)
 
 
 class SimpleFeatureInterpolator:
