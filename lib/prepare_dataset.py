@@ -60,6 +60,8 @@ def fill_nans(dataset: pd.DataFrame,
     # TN and TX
     dataset = feature_preparation.tn_preparation_fill_na(dataset)
     dataset = feature_preparation.tx_preparation_fill_na(dataset)
+    # Tg
+    dataset = feature_preparation.tg_preparation_fill_na(dataset)
     # ff3 and ff10
     dataset = feature_preparation.ff3_fill_na(dataset)
     dataset = feature_preparation.ff10_fill_na(dataset)
