@@ -164,27 +164,17 @@ def cl_pipeline(df: pd.DataFrame, column_name='Cl') -> pd.DataFrame:
     return df
 
 
-def parse_clouds(x: tp.Optional[str]) -> tp.Optional[float]:
+def parse_clouds(x: tp.Optional[str], no_clouds_default: float) -> tp.Optional[float]:
     if not isinstance(x, str):
         return None
     if x.lower().find('облаков нет') != -1:
-        return 0
+        return no_clouds_default
     groups = re.findall('[0-9]+', x)
     if len(groups) == 1:
         return float(groups[0])
     if len(groups) == 2:
         return (float(groups[0]) + float(groups[1])) / 2
     return None
-
-
-def n_pipeline(df: pd.DataFrame, column_name='N') -> pd.DataFrame:
-    df[column_name] = df[column_name].progress_map(parse_clouds)
-    return df
-
-
-def h_pipeline(df: pd.DataFrame, column_name='H') -> pd.DataFrame:
-    df[column_name] = df[column_name].progress_map(parse_clouds)
-    return df
 
 
 def pa_fill_na(df: pd.DataFrame, column_name='Pa') -> pd.DataFrame:
@@ -245,6 +235,7 @@ def _float_with_replace_merge(df: pd.DataFrame, col: str,
     df.drop(columns=[col], inplace=True)
     return pd.merge(df, vals, left_index=True, right_index=True, copy=False)
     
+
 def tn_preparation_fill_na(df: pd.DataFrame, col: str = 'Tn', t_col: str = 'T', 
                    window_size: int = 4, prefix_name: str = 'Tn_') -> pd.DataFrame:
     roll_mins_12_h = df[t_col].rolling(window=window_size, min_periods=1, center=False).min()
@@ -263,6 +254,36 @@ def ff3_fill_na(df: pd.DataFrame, col: str = 'ff3', f_col: str = 'Ff', prefix_na
 
 def ff10_fill_na(df: pd.DataFrame, col: str = 'ff10', f_col: str = 'Ff', prefix_name = 'ff10_'):
     return _float_with_replace_merge(df, col, df[f_col], prefix_name=prefix_name)
+
+
+def n_pipeline_with_na_fill(df: pd.DataFrame, column_name='N') -> pd.DataFrame:
+    default_height = 0
+    lambd = lambda x: parse_clouds(x, default_height)
+    df[column_name] = df[column_name].progress_map(lambd)
+    default = df[column_name].fillna(default_height)    
+    return _float_with_replace_merge(df, column_name, default, prefix_name='N_')
+
+
+def h_pipeline_with_na_fill(df: pd.DataFrame, column_name='H') -> pd.DataFrame:
+    default_height = 10000
+    lambd = lambda x: parse_clouds(x, default_height)
+    df[column_name] = df[column_name].progress_map(lambd)
+    default = df[column_name].fillna(default_height)    
+    return _float_with_replace_merge(df, column_name, default, prefix_name='H_')
+
+
+def nh_pipeline_with_na_fill(df: pd.DataFrame, column_name='Nh') -> pd.DataFrame:
+    default_vision = 0
+    lambd = lambda x: parse_clouds(x, default_vision)
+    df[column_name] = df[column_name].progress_map(lambd)
+    default = df[column_name].fillna(default_vision)
+    return _float_with_replace_merge(df, column_name, default, prefix_name='Nh_')
+
+
+def string_fill_na(df: pd.DataFrame, column_names: tp.List[str], default_fill='Нет данных!') -> pd.DataFrame:
+    for col in column_names:
+        df[col].fillna(default_fill, inplace=True)
+    return df    
 
 
 class SimpleFeatureInterpolator:

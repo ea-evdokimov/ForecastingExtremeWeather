@@ -39,9 +39,7 @@ pipeline = [
     feature_preparation.dd_pipeline,
     feature_preparation.ch_pipeline,
     feature_preparation.cm_pipeline,
-    feature_preparation.cl_pipeline,
-    feature_preparation.h_pipeline,
-    feature_preparation.n_pipeline
+    feature_preparation.cl_pipeline
 ]
 
 
@@ -65,7 +63,16 @@ def fill_nans(dataset: pd.DataFrame,
     # ff3 and ff10
     dataset = feature_preparation.ff3_fill_na(dataset)
     dataset = feature_preparation.ff10_fill_na(dataset)
-    
+
+    dataset.drop(['WW', 'WW1', 'WW2'], inplace=True)
+
+    dataset = feature_preparation.string_fill_na(dataset, ['Cl', 'Cm', 'Ch', 'E', 'E\''])
+
+    dataset = feature_preparation.n_pipeline_with_na_fill(dataset)
+    dataset = feature_preparation.nh_pipeline_with_na_fill(dataset)
+    dataset = feature_preparation.h_pipeline_with_na_fill(dataset)
+    # sss - сделать (sliding_window + linear)
+
     return dataset
 
 
