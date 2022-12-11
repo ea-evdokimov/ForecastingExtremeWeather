@@ -18,12 +18,12 @@ NUMERIC_COLUMNS_PREPARED = [
     "T", "P", "U", "Ff", "Po", "N", "Td",
     "Pa", "ff10", "ff3", "tR", "H", 
     "RRR", "sss", "dd_x_rad", "dd_y_rad", "Tn_isnan", "Tx_isnan",
-    "dd_isnan", "dd_changed", "sss", "VV"
+    "dd_isnan", "dd_changed", "sss", "VV", "Tg"
 ]
 
 
 CATEGORIAL_COLUMNS_PREPARED = [
-    "Cl", "Cm", "Ch", "Nh"
+    "Cl", "Cm", "Ch", "Nh", "E", "E\'"
 ]
 
 
