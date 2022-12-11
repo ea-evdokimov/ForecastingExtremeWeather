@@ -273,6 +273,7 @@ def tx_preparation_fill_na(df: pd.DataFrame, col: str = 'Tx', t_col: str = 'T',
 
 def tg_preparation_fill_na(df: pd.DataFrame, col: str = 'Tg', prefix_name='Tg_') -> pd.DataFrame:
     last_cold_temp = df[col].fillna(method='bfill')
+    last_cold_temp.name = str(last_cold_temp.name) + "_bfilled"
     return _float_with_replace_merge(df, col, last_cold_temp, prefix_name=prefix_name)
 
 def ff3_fill_na(df: pd.DataFrame, col: str = 'ff3', f_col: str = 'Ff', prefix_name = 'ff3_'):
