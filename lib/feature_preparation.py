@@ -237,21 +237,32 @@ def _float_with_replace(df: pd.DataFrame, col: str,
         prefix_name = col + "_"
     return pd.json_normalize(data).add_prefix(prefix_name)
 
+
+def _float_with_replace_merge(df: pd.DataFrame, col: str, 
+                              default: pd.Series, 
+                              prefix_name: tp.Optional[str] = None) -> pd.DataFrame:
+    vals = _float_with_replace(df, col, default, prefix_name=prefix_name)
+    df.drop(columns=[col], inplace=True)
+    return pd.merge(df, vals, left_index=True, right_index=True, copy=False)
     
-def tn_preparation(df: pd.DataFrame, col: str = 'Tn', t_col: str = 'T', 
+def tn_preparation_fill_na(df: pd.DataFrame, col: str = 'Tn', t_col: str = 'T', 
                    window_size: int = 4, prefix_name: str = 'Tn_') -> pd.DataFrame:
     roll_mins_12_h = df[t_col].rolling(window=window_size, min_periods=1, center=False).min()
-    vals = _float_with_replace(df, col, roll_mins_12_h, prefix_name=prefix_name)
-    df.drop(columns=[col], inplace=True)
-    return pd.merge(df, vals, left_index=True, right_index=True, copy=False)
+    return _float_with_replace_merge(df, col, roll_mins_12_h, prefix_name=prefix_name)
 
 
-def tx_preparation(df: pd.DataFrame, col: str = 'Tx', t_col: str = 'T', 
+def tx_preparation_fill_na(df: pd.DataFrame, col: str = 'Tx', t_col: str = 'T', 
                 window_size: int = 4, prefix_name: str = 'Tx_') -> pd.DataFrame:
     roll_maxs_12_h = df[t_col].rolling(window=window_size, min_periods=1, center=False).max()
-    vals = _float_with_replace(df, col, roll_maxs_12_h, prefix_name=prefix_name)
-    df.drop(columns=[col], inplace=True)
-    return pd.merge(df, vals, left_index=True, right_index=True, copy=False)
+    return _float_with_replace_merge(df, col, roll_maxs_12_h, prefix_name=prefix_name)
+
+
+def ff3_fill_na(df: pd.DataFrame, col: str = 'ff3', f_col: str = 'Ff', prefix_name = 'ff3_'):
+    return _float_with_replace_merge(df, col, df[f_col], prefix_name=prefix_name)
+
+
+def ff10_fill_na(df: pd.DataFrame, col: str = 'ff10', f_col: str = 'Ff', prefix_name = 'ff10_'):
+    return _float_with_replace_merge(df, col, df[f_col], prefix_name=prefix_name)
 
 
 class SimpleFeatureInterpolator:
