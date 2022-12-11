@@ -4,7 +4,6 @@ from enum import Enum
 import pandas as pd
 from loguru import logger
 from tqdm.auto import tqdm
-from functools import lru_cache
 
 import feature_preparation
 import target_markup
@@ -19,7 +18,7 @@ NUMERIC_COLUMNS_PREPARED = [
     "T", "P", "U", "Ff", "Po", "N", "Td",
     "Pa", "ff10", "ff3", "tR", "H", 
     "RRR", "sss", "dd_x_rad", "dd_y_rad", "Tn_isnan", "Tx_isnan",
-    "dd_isnan", "dd_changed"
+    "dd_isnan", "dd_changed", "sss", "VV"
 ]
 
 
@@ -39,7 +38,8 @@ pipeline = [
     feature_preparation.dd_pipeline,
     feature_preparation.ch_pipeline,
     feature_preparation.cm_pipeline,
-    feature_preparation.cl_pipeline
+    feature_preparation.cl_pipeline,
+    feature_preparation.vv_pipeline
 ]
 
 
@@ -71,7 +71,7 @@ def fill_nans(dataset: pd.DataFrame,
     dataset = feature_preparation.n_pipeline_with_na_fill(dataset)
     dataset = feature_preparation.nh_pipeline_with_na_fill(dataset)
     dataset = feature_preparation.h_pipeline_with_na_fill(dataset)
-    # sss - сделать (sliding_window + linear)
+    dataset = feature_preparation.sss_pipeline_with_fill(dataset)
 
     return dataset
 

@@ -80,6 +80,11 @@ def vv_preparation(x: tp.Union[str, float]) -> tp.Optional[float]:
         return float(re.match(r'\w+ ([0-9.]+)', x).group(1))
 
 
+def vv_pipeline(df: pd.DataFrame, column_name='VV') -> pd.DataFrame:
+    df[column_name] = df[column_name].progress_map(vv_preparation)
+    return df
+
+
 def sliding_window_features(df, feature_columns, target_columns, size):
     df_new = df.sort_index(ascending=False).copy()
 
@@ -202,11 +207,29 @@ def sss_RRR_tr_preparation(value: tp.Union[str, float]) -> tp.Optional[float]:
     return None
 
 
-def rolling_window_na_fill(df: pd.DataFrame, column_name: str, window_size: int) -> pd.DataFrame:
-    rolling = df[column_name].rolling(window=window_size, min_periods=1, center=True).mean()
+def rolling_window_na_fill(df: pd.DataFrame, column_name: str, window_size: int, min_periods: int = 1) -> pd.DataFrame:
+    rolling = df[column_name].rolling(window=window_size, min_periods=min_periods, center=True).mean()
     df[column_name] = df[column_name].fillna(rolling)
     return df
 
+def sss_pipeline_with_fill(df: pd.DataFrame, column_name: str='sss') -> pd.DataFrame:
+    df[column_name] = df[column_name].map(sss_RRR_tr_preparation)
+    copy = df[column_name].copy()
+    copy.loc[:] = np.nan
+    copy[df['T'] > 12] = 0
+    df[column_name] = df[column_name].fillna(copy)
+
+    # зимой снег быстро не тает, можно расширить интерполяцию 
+    copy = df[column_name].copy().interpolate(method='linear', limit=40, limit_direction='both')
+    copy = rolling_window_na_fill(copy.to_frame(), 'sss', 48, 2)
+    copy.sss[df['T'] > 0] = np.nan
+    df[column_name] = df[column_name].fillna(copy.sss)
+
+    # иначе интерполируем не больше чем на 3 дня
+    df = rolling_window_na_fill(df, 'sss', 16, 4)
+    df[column_name] = df[column_name].interpolate(method='slinear', limit=8, limit_direction='both')
+    df[column_name] = df[column_name].fillna(0)
+    return df
 
 class FloatWithNanModel(BaseModel):
     isnan: bool
@@ -283,7 +306,7 @@ def nh_pipeline_with_na_fill(df: pd.DataFrame, column_name='Nh') -> pd.DataFrame
 def string_fill_na(df: pd.DataFrame, column_names: tp.List[str], default_fill='Нет данных!') -> pd.DataFrame:
     for col in column_names:
         df[col].fillna(default_fill, inplace=True)
-    return df    
+    return df
 
 
 class SimpleFeatureInterpolator:
