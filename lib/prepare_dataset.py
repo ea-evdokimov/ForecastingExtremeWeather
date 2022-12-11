@@ -17,14 +17,14 @@ ALLOW_COLUMNS = ['local_time', 'T', 'Po', 'P', 'Pa', 'U', 'DD', 'Ff', 'ff10', 'f
 
 NUMERIC_COLUMNS_PREPARED = [
     "T", "P", "U", "Ff", "Po", "N", "Td",
-    "Pa", "ff10", "ff3", "tR", "Cl", "Nh", "H", 
+    "Pa", "ff10", "ff3", "tR", "H", 
     "RRR", "sss", "dd_x_rad", "dd_y_rad", "Tn_isnan", "Tx_isnan",
     "dd_isnan", "dd_changed"
 ]
 
 
 CATEGORIAL_COLUMNS_PREPARED = [
-    "Cl", "Cm", "Ch"
+    "Cl", "Cm", "Ch", "Nh"
 ]
 
 
