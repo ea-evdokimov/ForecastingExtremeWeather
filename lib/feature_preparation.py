@@ -221,12 +221,12 @@ def sss_pipeline_with_fill(df: pd.DataFrame, column_name: str='sss') -> pd.DataF
 
     # зимой снег быстро не тает, можно расширить интерполяцию 
     copy = df[column_name].copy().interpolate(method='linear', limit=40, limit_direction='both')
-    copy = rolling_window_na_fill(copy.to_frame(), 'sss', 48, 2)
+    copy = rolling_window_na_fill(copy.to_frame(), column_name, 48, 2)
     copy.sss[df['T'] > 0] = np.nan
-    df[column_name] = df[column_name].fillna(copy.sss)
+    df[column_name] = df[column_name].fillna(copy[column_name])
 
     # иначе интерполируем не больше чем на 3 дня
-    df = rolling_window_na_fill(df, 'sss', 16, 4)
+    df = rolling_window_na_fill(df, column_name, 16, 4)
     df[column_name] = df[column_name].interpolate(method='slinear', limit=8, limit_direction='both')
     df[column_name] = df[column_name].fillna(0)
     return df
@@ -272,8 +272,7 @@ def tx_preparation_fill_na(df: pd.DataFrame, col: str = 'Tx', t_col: str = 'T',
 
 
 def tg_preparation_fill_na(df: pd.DataFrame, col: str = 'Tg', prefix_name='Tg_') -> pd.DataFrame:
-    last_cold_temp = df[col].fillna(method='bfill')
-    last_cold_temp.name = str(last_cold_temp.name) + "_bfilled"
+    last_cold_temp = df[col].fillna(method='bfill').fillna(0).rename(col + "_bfilled")
     return _float_with_replace_merge(df, col, last_cold_temp, prefix_name=prefix_name)
 
 def ff3_fill_na(df: pd.DataFrame, col: str = 'ff3', f_col: str = 'Ff', prefix_name = 'ff3_'):
@@ -288,7 +287,7 @@ def n_pipeline_with_na_fill(df: pd.DataFrame, column_name='N') -> pd.DataFrame:
     default_height = 0
     lambd = lambda x: parse_clouds(x, default_height)
     df[column_name] = df[column_name].progress_map(lambd)
-    default = df[column_name].fillna(default_height)    
+    default = df[column_name].fillna(default_height).rename(column_name + "_def") 
     return _float_with_replace_merge(df, column_name, default, prefix_name='N_')
 
 
@@ -296,7 +295,7 @@ def h_pipeline_with_na_fill(df: pd.DataFrame, column_name='H') -> pd.DataFrame:
     default_height = 10000
     lambd = lambda x: parse_clouds(x, default_height)
     df[column_name] = df[column_name].progress_map(lambd)
-    default = df[column_name].fillna(default_height)    
+    default = df[column_name].fillna(default_height).rename(column_name + "_def")    
     return _float_with_replace_merge(df, column_name, default, prefix_name='H_')
 
 
@@ -304,7 +303,7 @@ def nh_pipeline_with_na_fill(df: pd.DataFrame, column_name='Nh') -> pd.DataFrame
     default_vision = 0
     lambd = lambda x: parse_clouds(x, default_vision)
     df[column_name] = df[column_name].progress_map(lambd)
-    default = df[column_name].fillna(default_vision)
+    default = df[column_name].fillna(default_vision).rename(column_name + "_def") 
     return _float_with_replace_merge(df, column_name, default, prefix_name='Nh_')
 
 

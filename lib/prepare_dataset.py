@@ -20,7 +20,7 @@ NUMERIC_COLUMNS_PREPARED = [
     "RRR", "sss", "dd_x_rad", "dd_y_rad", "Tn_isnan", "Tx_isnan",
     "dd_isnan", "dd_changed", "sss", "VV", "Tg"
 ]
-    
+
 
 CATEGORIAL_COLUMNS_PREPARED = [
     "Cl", "Cm", "Ch", "Nh", "E", "E\'"
@@ -49,7 +49,7 @@ def fill_nans(dataset: pd.DataFrame,
     if mode == Mode.UNPROCESSED:
         return dataset
     
-    simple_int_cand = ["T", "PP", "VV", "U", "Ff", "Po", "N", "Td"]
+    simple_int_cand = ["T", "PP", "VV", "U", "Ff", "Po", "N", "Td", "P"]
     if allow_columns is not None:
         simple_int_cand = list(set(simple_int_cand).intersection(set(allow_columns)))
     for col in simple_int_cand:
@@ -66,7 +66,7 @@ def fill_nans(dataset: pd.DataFrame,
     dataset = feature_preparation.ff3_fill_na(dataset)
     dataset = feature_preparation.ff10_fill_na(dataset)
 
-    dataset.drop(['WW', 'WW1', 'WW2'], inplace=True)
+    dataset.drop(['WW', 'W1', 'W2'], inplace=True, axis=1)
 
     dataset = feature_preparation.string_fill_na(dataset, ['Cl', 'Cm', 'Ch', 'E', 'E\''])
 
