@@ -20,7 +20,7 @@ NUMERIC_COLUMNS_PREPARED = [
     "RRR", "sss", "dd_x_rad", "dd_y_rad", "Tn_isnan", "Tx_isnan",
     "dd_isnan", "dd_changed", "sss", "VV", "Tg"
 ]
-
+    
 
 CATEGORIAL_COLUMNS_PREPARED = [
     "Cl", "Cm", "Ch", "Nh", "E", "E\'"
