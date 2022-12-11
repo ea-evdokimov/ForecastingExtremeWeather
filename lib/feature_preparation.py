@@ -223,7 +223,7 @@ class FloatWithNanModel(BaseModel):
     val: float
 
 def _float_with_nan_prep(d: tp.Optional[float], default: float) -> FloatWithNanModel:
-    if d is None or not isinstance(d, float):
+    if not isinstance(d, float) or np.isnan(d):
         return FloatWithNanModel(isnan=True, val=default)
     return FloatWithNanModel(isnan=False, val=d)
 
