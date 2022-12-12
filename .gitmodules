@@ -1,0 +1,3 @@
+[submodule "rp5_weather"]
+	path = rp5_weather
+	url = git@github.com:MonCherQuasimodo/rp5_weather.git
